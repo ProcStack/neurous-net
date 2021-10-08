@@ -1,4 +1,5 @@
-// NeurousNet; Kevin Edzenga
+// NeurousNet - System State Values
+//  Written by Kevin Edzenga; October 2021
 //
 //  Device and Interaction States
 
@@ -10,15 +11,11 @@ const State={
   tablet : false,
   mouseX : 0,
   mouseY : 0,
-  mousePrevX : [0,0],
-  mousePrevY : [0,0],
   mButton : 0,
-  pause : 0,
+  paused : false,
   runner : 0,
   mouseAttract : 0,
 
-  mouseVel : [0,0],
-  mouseVelMag : 0,
   touchDown : 0,
   touchDragCount : 0,
   touchTwoFinger : 0,
@@ -35,4 +32,4 @@ const State={
   IE : document.all?true:false
 } 
 
-export default State
+module.exports = State

@@ -1,5 +1,5 @@
 
-export default class EmitterBase{
+class EmitterBase{
   _type = "EmitterBase"
   get type() {
     return this._type
@@ -8,20 +8,13 @@ export default class EmitterBase{
     this._type = value
   }
   
-  _reapRate = 3
-  get reapRate() {
-    return this._reapRate
-  }
-  set reapRate(value) {
-    this._reapRate = value
-  }
-  
   constructor( State ){
     this.State=State
     this.time = 0
     this.runner = 0
     
     this.count = 0
+    this.curId = 0
     this.points = []
     this.reapList = []
     
@@ -34,9 +27,12 @@ export default class EmitterBase{
   }
   
   updateCount(){
-    this.count = this.points.length
+    let curCount = this.points.length
+    this.curId += curCount - this.count
+    this.count = curCount
   }
   
+  // Per-Frame logic; update time, check for dead particles, clean up Dead point
   step(){
     this.runner += 1
     this.updateTime()
@@ -58,10 +54,17 @@ export default class EmitterBase{
     }
   }
   
+  // Remove Dead points from Emitter
   reapParticles(){
     if( this.reapList.length > 0 ){
+      // Only cleanup 'maxReap' ammount of points at a time for performance
+      //   This isn't an issue for Point Class objects; not enough points are Dead per Frame
+      //   It will be a problem for WebGL Mesh Vertex count changes per Frame
+      //     Cost Benefit; Depending on Total Point Counts, rebuilding WebGL Mesh in intervals may be best
+      //       IE; Reaped Points set Mesh Uniforms to not render, then Rebuild Mesh every N seconds
       let maxReap = 10
       let curReap = 0
+      
       while( this.reapList.length > 0 ){
           curReap+=1
           if( curReap > maxReap ){
@@ -76,3 +79,5 @@ export default class EmitterBase{
 	}
   
 }
+
+module.exports = EmitterBase

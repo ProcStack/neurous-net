@@ -1,20 +1,28 @@
 
-import Point from "./PointBase.js"
+const Utils = require( "../Utils.js" )
+const Point = require( "./PointBase.js" )
 
-export default class PointTrail extends Point{
+class PointTrail extends Point{
    _type = "PointTrail"
 
   constructor( State, id,seed,pos,vel,lifeSpan,color,alpha,trail,tlen, forces){
     super( State, id,seed,pos,vel,lifeSpan,color,alpha )
     
+    
+    this.weight *= (1-this.weight*.5)
+    
 		this.pullDist = this.weight*90+(this.State.sW+this.State.sH)*(.1 + .1*this.State.mobile);
     
-		this.velMagCap = 30+(30*this.size);
+    if( State.mobile ){
+      this.velMagCap = 10+(10*this.size);
+    }else{
+      this.velMagCap = 30+(30*this.size);
+    }
     
 		this.tlen = Math.floor(tlen*this.weight)
 		this.mouseDist = this.weight*3+1
 		this.trail = [];
-		for(var x=0; x<tlen; ++x){
+		for(let x=0; x<tlen; ++x){
 			this.trail.push(pos[0])
 			this.trail.push(pos[1])
 		}
@@ -36,9 +44,11 @@ export default class PointTrail extends Point{
     }
     
     this.mousePerc *= .9
+    this.colorBoost *= .8
     
 		this.trailUpdate();
 		
+    // Check if Mouse/Touch in Pull All or Force Influence mode
     if((this.State.mouseAttract>0 || this.forces.length>0)){
       if(this.State.mouseAttract==3){
         this.fullPullInfluence()
@@ -60,15 +70,16 @@ export default class PointTrail extends Point{
     return false
 	}
   
+  // Randomized positional offset; applied to Target's base position
   getTargetOffset( multOffset=1 ){
-    var mScale=400+(this.State.sW+this.State.sH)*.1;
-    let mScaleWH=[ this.State.mouseX/mScale, this.State.mouseY/mScale ];
+    let mScale = 400+(this.State.sW+this.State.sH)*.1;
+    let mScaleWH = [ this.State.mouseX/mScale, this.State.mouseY/mScale ];
     let idSeedInf = this.id * 75.1579 + 5014 + this.seed;
     let runnerScale = this.State.runner/30;
     let pi = 3.14159265358979
     let magNoise = this.id/3+this.age/3
     
-    let addedOff=[
+    let addedOff = [
       Math.sin( idSeedInf + runnerScale + mScaleWH[0] + Math.cos(this.id*215.15+ runnerScale*.2 +mScaleWH[1])*pi)  *  (Math.sin( magNoise )*this.targetOffsetVariance+this.targetOffsetDist*multOffset),
       Math.cos( idSeedInf + runnerScale + mScaleWH[1] + Math.sin(this.id*5215.15+ runnerScale*.2 +mScaleWH[0])*pi)  *  (Math.cos( magNoise+this.seed )*this.targetOffsetVariance+this.targetOffsetDist*multOffset)
     ];
@@ -76,137 +87,152 @@ export default class PointTrail extends Point{
     return addedOff;
   }
   
+  // Mouse/Touch in Pull All mode;  Right Click / Long Touch
   fullPullInfluence(){
-    let sign=e=>e<0?-1:1;
-		let normalize=e=>{
-      let l=e[0]*sign(e[0])+e[1]*sign(e[1]);
-      return l==0 ? [0,0] : [e[0]/l,e[1]/l];
-    };
-    let dot=(e,b)=>{ return e[0]*b[0]+e[1]*b[1] };
-		let mag=e=>((e[0]**2+e[1]**2)**.5);
-		let lerpVec=(x,c,v)=>{ return [ lerp(x[0],c[0],v), lerp(x[1],c[1],v) ] };
-		let lerp=(x,c,v)=>{ return x*(1-v) + c*v };
     
-    var mScale=300+(this.State.sW+this.State.sH)*.1;
+    // Get Math Functions
+    let {sign, addVec, subVec, multFloat, normalize, dot, mag, lerpVec, lerp} = Utils
+    
+    let pWeight = this.weight
+    if( this.State.mobile ){
+      pWeight = pWeight*.5 + .5
+    }
     
     let addedOff = this.getTargetOffset();
     
-    var offMag=22+this.size*1.5;
-    var toPos=[((this.State.mouseX+addedOff[0])-this.pos[0]), ((this.State.mouseY+addedOff[1])-this.pos[1])];
-    var normPos=normalize(toPos);
+    // Find base Target position
+    let offMag = 22+this.size*1.5;
+    let sourcePos = [this.State.mouseX, this.State.mouseY]
+    let toPos = [((sourcePos[0]+addedOff[0])-this.pos[0]), ((sourcePos[1]+addedOff[1])-this.pos[1])];
+    let normPos = normalize( toPos );
     let pushPosMult = 100;
-    toPos[0] += normPos[0] * pushPosMult ;
-    toPos[1] += normPos[1] * pushPosMult ;
+    toPos = addVec( toPos, multFloat(normPos, pushPosMult) );
     
-    var mather=mag( toPos );
-    offMag=offMag+mather*.4;
-    var ratio=(toPos[0]/toPos[1]);
+    // If position is too close to the Sourse Position, blend to the Added Offset Position
+    let sourceDist= 1-Math.min(1, mag( subVec( this.pos, sourcePos ) ) * (.008) );
+    toPos = lerpVec( toPos, addedOff, sourceDist );
+    this.colorBoost = Math.min(1, this.colorBoost+sourceDist*.05);
     
-    var normVel=normalize( [...this.vel] );
-    toPos[0]+=normVel[0]*6;
-    toPos[1]+=normVel[1]*6;
+    
+    // Limit Target position distance
+    let mather = mag( toPos );
+    offMag = offMag+mather*.4;
+    let normVel = normalize( this.vel );
+    let multNormVal = 6;
+    toPos = addVec( toPos, multFloat(normVel,multNormVal) );
     if(mather>offMag){
       toPos = normalize( toPos )
-      toPos[0] *= offMag;
-      toPos[1] *= offMag;
+      toPos = multFloat( toPos, offMag );
     }
-    var smooth=this.id%5+this.size*((this.weight*.6+.4)**2);
-    let curWeight=this.weight*.4+.4;
-    toPos[0]=(toPos[0]*(1-curWeight)+this.vel[0]*curWeight+this.vel[0]*smooth)/(smooth+1);
-    toPos[1]=(toPos[1]*(1-curWeight)+this.vel[1]*curWeight+this.vel[1]*smooth)/(smooth+1);
     
-    let weightInf = this.weight*.4+.6;
-    let vDelta=((dot( normalize(this.vel), normalize(toPos) )*.6+.4)*weightInf + (1-weightInf));
-
+    // Limit Target position influence
+    let smooth = this.id%5+this.size*((pWeight*.6+.4)**2);
+    let curWeight = pWeight*.4+.4;
+    toPos[0] = (toPos[0]*(1-curWeight)+this.vel[0]*curWeight+this.vel[0]*smooth)/(smooth+1);
+    toPos[1] = (toPos[1]*(1-curWeight)+this.vel[1]*curWeight+this.vel[1]*smooth)/(smooth+1);
+    
+    // Limit Target based on amount of turning + point weight
+    let weightInf = pWeight*.4+.6;
+    let vDelta = ((dot( normalize(this.vel), normalize(toPos) )*.6+.4)*weightInf + (1-weightInf));
     toPos = lerpVec( this.vel, toPos, vDelta );
+    
+    // Target blending with Previous Target
     toPos = lerpVec( this.prevToPos, toPos, .5);
-    this.vel[0]=toPos[0];
-    this.vel[1]=toPos[1];
+    this.vel = toPos;
     this.prevToPos = toPos;
     this.mousePerc = Math.min( 1, this.mousePerc+.2 );
   }
   
+  // Mouse/Touch & Forces influence on Point velocity
   calculateForceInfluences(){
     
-    let sign=e=>e<0?-1:1;
-		let normalize=e=>{
-      let l=e[0]*sign(e[0])+e[1]*sign(e[1]);
-      return l==0 ? [0,0] : [e[0]/l,e[1]/l];
-    };
-		let mag=e=>((e[0]**2+e[1]**2)**.5);
-    let dot=(e,b)=>{ return e[0]*b[0]+e[1]*b[1] };
+    // Get Math Functions
+    let {sign, normalize, dot, mag} = Utils
     
-    var posArr=new Array();
-    var infArr=new Array();
-    var infRef=.7;
-    var infMax=0;
+    let posArr = [];
+    let infArr = [];
+    let infRef = .7;
+    let infMax = 0;
+    // Mouse/Touch is down
     if(this.State.mouseAttract==1){
-      posArr.push([this.State.mouseX,this.State.mouseY]);
+      
+      let sourcePos = [this.State.mouseX, this.State.mouseY]
+      posArr.push(sourcePos);
       infArr.push(.9);
     }
+    // Forces exist; currently Newton Forces only
     if(this.forces.length>0){ 
-      for(var x=0; x<this.forces.length; ++x){
+      for(let x=0; x<this.forces.length; ++x){
         posArr.push( this.forces[x].pos );
-        var curInf=(this.forces[x].weight)*infRef;
+        let curInf=(this.forces[x].weight)*infRef;
         infArr.push(curInf);
       }
     }
     
-    var toPos=[0,0];
-    var toPosTemp=[0,0];
+    let toPos = [0,0];
+    let toPosTemp = [0,0];
     
-    var pullPos=[];
-    var pullWeight=[];
-    var forceInfluence=0;
+    let pullPos = [];
+    let pullWeight = [];
+    let forceInfluence = 0;
+    
+    
+    let pWeight = this.weight
+    if( this.State.mobile ){
+      pWeight = pWeight*.6 + .2
+    }
     
     let addedOff = this.getTargetOffset();
     
-    for(var x=0; x<posArr.length;++x){
-      var curMag=mag( [ (posArr[x][0]-this.pos[0]), (posArr[x][1]-this.pos[1]) ] );
+    // Find Force influences & relative positions
+    for(let x=0; x<posArr.length;++x){
+      let curMag = mag( [ (posArr[x][0]-this.pos[0]), (posArr[x][1]-this.pos[1]) ] );
       if(curMag<this.pullDist){
-        forceInfluence=1;
-        var blender=((1-curMag/this.pullDist))*infArr[x];
-        blender=Math.max( 0, blender );
+        forceInfluence = 1;
+        let blender = ((1-curMag/this.pullDist))*infArr[x];
+        blender = Math.max( 0, blender );
         
-        var inf=blender*(1-this.weight);
+        let inf = blender*(1-pWeight);
         
         
-        let offMag=(15-15*inf) + 7 + this.weight*1.5;//*infArr[x];
-        toPos=[((posArr[x][0]+addedOff[0])-this.pos[0]), ((posArr[x][1]+addedOff[1])-this.pos[1])];
+        let offMag = (15-15*inf) + 7 + pWeight*1.5;//*infArr[x];
+        toPos = [((posArr[x][0]+addedOff[0])-this.pos[0]), ((posArr[x][1]+addedOff[1])-this.pos[1])];
         
         let targetDot = dot( normalize(toPos), normalize(this.vel) )*.3+.7;
 
-        pullWeight.push( inf*(1-targetDot*(this.weight*.3+.7)) );
+        pullWeight.push( inf*(1-targetDot*(pWeight*.3+.7)) );
         
         pullPos.push( [...toPos] );
       }
       this.mouseDist=Math.min(this.mouseDist, curMag);
     }
     
-    if( forceInfluence > 0){
-      var totalWeight=pullWeight.reduce( (x,c)=>x+c);
-        
-      var avgPos = [0,0];
-      var avgWeight = 0;
-      for(var x=0; x<pullPos.length;++x){
-        avgWeight += pullWeight[x];
-        avgPos[0] += pullPos[x][0] * avgWeight
-        avgPos[1] += pullPos[x][1] * avgWeight
-      }
+    if( forceInfluence == 0 ){ return; }
+    
+    // Forces found, calculate velocity changes
+    let totalWeight = pullWeight.reduce( (x,c)=>x+c);
       
-      this.mousePerc = Math.min( 1, this.mousePerc + avgWeight*.5 );
-
-      avgPos[0] = avgPos[0]/pullPos.length
-      avgPos[1] = avgPos[1]/pullPos.length
-      let avgVelDot = (dot( normalize(avgPos), normalize(this.vel) )*.2+.8)*avgWeight;// * (1-this.mousePerc) + this.mousePerc;
-      //avgVelDot *= 1-this.weight
-      this.vel[0] += avgPos[0]*avgVelDot;
-      this.vel[1] += avgPos[1]*avgVelDot;
-      
-      
+    let avgPos = [0,0];
+    let avgWeight = 0;
+    for(let x=0; x<pullPos.length;++x){
+      avgWeight += pullWeight[x];
+      avgPos[0] += pullPos[x][0] * avgWeight
+      avgPos[1] += pullPos[x][1] * avgWeight
     }
+    
+    // Point/Trail draw brightness & thickness
+    this.mousePerc = Math.min( 1, this.mousePerc + avgWeight*.5 );
+
+    avgPos[0] = avgPos[0]/pullPos.length
+    avgPos[1] = avgPos[1]/pullPos.length
+    let avgVelDot = (dot( normalize(avgPos), normalize(this.vel) )*.2+.8)*avgWeight;// * (1-this.mousePerc) + this.mousePerc;
+    //avgVelDot *= 1-pWeight
+    this.vel[0] += avgPos[0]*avgVelDot;
+    this.vel[1] += avgPos[1]*avgVelDot;
+    
   }
 	
+  // Append Point position to Trail array
 	trailUpdate(){
 		this.trail.push(this.pos[0]);
 		this.trail.push(this.pos[1]);
@@ -215,3 +241,5 @@ export default class PointTrail extends Point{
 		}
 	}
 }
+
+module.exports = PointTrail

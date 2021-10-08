@@ -1,163 +1,137 @@
 // NeurousNet - Utilities Class
-//  Created by Kevin Edzenga; October 2021
+//  Written by Kevin Edzenga; October 2021
 //
-//  Neurous( *State.js Object* )
 //  Common HTML5 Canvas & Math Functions
 
-
-export default class Utils{
-  constructor(State){
-    this.State = State    
-  }
+const Utils = {
   
-  drawGeo(loc,eCount,size,color,alpha,filled,flip,canvas,comp){
-    var x=loc[0];
-    var y=loc[1];
-    var R=color[0];
-    var G=color[1];
-    var B=color[2];
-    let hex=this.rgbToHex([Math.floor(R),Math.floor(G),Math.floor(B)] );
-    var csW=canvas.width;
-    var csH=canvas.height;
-    
-    let draw=canvas.getContext('2d');
-    if(!this.State.mobile) draw.globalCompositeOperation=comp;
-
-    var runCount=1;
-    draw.globalAlpha=alpha;
-    for(var c=0;c<runCount;c+=1){
-      draw.beginPath();
-      draw.lineWidth=Math.max(1,filled);
-      if(filled==-1){
-        draw.fillStyle=hex;
-      }else{
-        draw.strokeStyle=hex;
-      }
-      if(eCount<=2){
-        if(eCount==1){
-          var grad=draw.createRadialGradient((x-this.State.sW/2)+this.State.sW/2,(y-this.State.sH/2)+this.State.sH/2,1,(x-this.State.sW/2)+this.State.sW/2,(y-this.State.sH/2)+this.State.sH/2,size/2);
-          grad.addColorStop(0,'rgba('+Math.floor(color[0])+','+Math.floor(color[1])+','+Math.floor(color[2])+',1)');
-          if(color.length>4){
-            grad.addColorStop(1,'rgba('+Math.floor(color[3])+','+Math.floor(color[4])+','+Math.floor(color[5])+',0)');
-          }else{
-            grad.addColorStop(1,'rgba('+Math.floor(color[0])+','+Math.floor(color[1])+','+Math.floor(color[2])+',0)');
-          }
-          draw.fillStyle=grad;
-        }else if(eCount==2){
-          var grad=draw.createRadialGradient((x-this.State.sW/2)+this.State.sW/2,(y-this.State.sH/2)+this.State.sH/2,1,(x-this.State.sW/2)+this.State.sW/2,(y-this.State.sH/2)+this.State.sH/2,size/2);
-          grad.addColorStop(0,'rgba('+Math.floor(color[0])+','+Math.floor(color[1])+','+Math.floor(color[2])+',0)');
-          if(color.length>4){
-            grad.addColorStop(1,'rgba('+Math.floor(color[3])+','+Math.floor(color[4])+','+Math.floor(color[5])+',1)');
-          }else{
-            grad.addColorStop(1,'rgba('+Math.floor(color[0])+','+Math.floor(color[1])+','+Math.floor(color[2])+',1)');
-          }
-          draw.fillStyle=grad;
-        }
-        draw.arc((x-this.State.sW/2)+this.State.sW/2,(y-this.State.sH/2)+this.State.sH/2,size/2,0,Math.PI*2);
-      }else{
-        if(loc.length>2){
-          if(eCount==3){
-            draw.moveTo((x-this.State.sW/2)+this.State.sW/2,(y-this.State.sH/2)+this.State.sH/2);
-            //draw.moveTo(x,y);
-            for(var v=2; v<loc.length; v+=2){
-              draw.lineTo((loc[v]-this.State.sW/2)+this.State.sW/2,(loc[v+1]-this.State.sH/2)+this.State.sH/2);
-            }
-            draw.lineJoin = 'round';
-            if(size==1 && filled!=-1){
-              draw.closePath();
-            }else{
-              draw.lineJoin = 'miter';
-            }
-          }else{
-            draw.lineJoin = 'round';
-            draw.moveTo((x-this.State.sW/2)+this.State.sW/2,(y-this.State.sH/2)+this.State.sH/2);
-            for(var v=2; v<loc.length; v+=4){
-              draw.quadraticCurveTo((loc[v]-this.State.sW/2)+this.State.sW/2,(loc[v+1]-this.State.sH/2)+this.State.sH/2, (loc[v+2]-this.State.sW/2)+this.State.sW/2,(loc[v+3]-this.State.sH/2)+this.State.sH/2);
-            }
-            if(size==1){
-              draw.quadraticCurveTo((loc[loc.length-2]-this.State.sW/2)+this.State.sW/2,(loc[loc.length-1]-this.State.sH/2)+this.State.sH/2, (loc[0]-this.State.sW/2)+this.State.sW/2,(loc[1]-this.State.sH/2)+this.State.sH/2);
-            }
-            /*
-            draw.moveTo(x,y);
-            for(var v=2; v<loc.length; v+=4){
-              draw.quadraticCurveTo(loc[v],loc[v+1], loc[v+2],loc[v+3]);
-            }
-            if(size==1){
-              draw.quadraticCurveTo(loc[loc.length-2],loc[loc.length-1], loc[0],loc[1]);
-            }*/
-            if(size==1 && filled!=-1){
-              draw.closePath();
-            }else{
-              draw.lineJoin = 'miter';
-            }
-          }
-        }
-      }
-      if(filled==-1){
-        draw.fill();
-      }else{
-        draw.stroke();
-      }
-    }
-  }
-
-  drawLine(points,width,color,alpha,arcType,canvas,dash){
-    var hex,draw;
-    var R=color[0];
-    var G=color[1];
-    var B=color[2];	
-    hex=rgbToHex([Math.floor(R),Math.floor(G),Math.floor(B)] );
-    if(typeof(canvas)==="string"){
-      draw=canvas.getContext('2d');
+  // Sign of Variable
+  //   Math.sign(0) returns 0
+  //   sign(0) returns 1
+  sign : (e)=>{
+    return e<0?-1:1
+  },
+  
+  // == == == == == == == == == == == == ==
+  
+  // -- -- -- -- -- -- -- -- --
+  // -- Vector2 Math - -- -- -- --
+  // -- -- -- -- -- -- -- -- -- -- --
+  
+  add : (e,b)=>{
+    if( typeof(b) == "object" ){ // Faster than Array.isArray
+      return Utils.addVec(e,b);
     }else{
-      draw=canvas;
+      return Utils.addFloat(e,b);
     }
-    
-    draw.beginPath();
-    if(dash[0]!=-1){
-      draw.globalAlpha=alpha/2;
-    }
-    draw.strokeStyle=hex;
-    draw.lineWidth=width;
-    draw.moveTo(points[0],points[1]);
-    for(var x=2; x<(points.length); x+=2){
-      draw.lineTo(points[x],points[x+1]);
-    }
-    if(arcType==0){
-      arcType='round';
-    }else if(arcType==1){
-      arcType='miter';
-    }else if(arcType==2){
-      arcType='bevel';
+  },
+  addFloat : (e,b)=>{
+    return e.map( (x,c)=>{
+      return x+b;
+    });
+  },
+  addVec : (e,b)=>{
+    return e.map( (x,c)=>{
+      return x+b[c];
+    });
+  },
+  
+  // --
+  
+  sub : (e,b)=>{
+    if( typeof(b) == "object" ){ // Faster than Array.isArray
+      return Utils.subVec(e,b);
     }else{
-      arcType='round';
+      return Utils.subFloat(e,b);
     }
-    draw.lineJoin = arcType;
-    draw.lineCap = arcType;
-    draw.stroke();
-    if(dash[0]!=-1){
-      draw.globalAlpha=alpha;
-      draw.setLineDash(dash);
-      draw.stroke();
+  },
+  subFloat : (e,b)=>{
+    return e.map( (x,c)=>{
+      return x-b;
+    });
+  },
+  subVec : (e,b)=>{ // ( To, From )
+    return e.map( (x,c)=>{
+      return x-b[c];
+    });
+  },
+  
+  // --
+  
+  mult : (e,b)=>{
+    if( typeof(b) == "object" ){ // Faster than Array.isArray
+      return Utils.multVec(e,b);
+    }else{
+      return Utils.multFloat(e,b);
     }
-  }
+  },
+  multFloat : (e,b)=>{
+    return e.map( (x,c)=>{
+      return x*b;
+    });
+  },
+  multVec : (e,b)=>{
+    return e.map( (x,c)=>{
+      return x*b[c];
+    });
+  },
+  
+  // --
+  
+  // Dot Product of two Vector2s [x,y]
+  dot : (e,b)=>{
+    return e[0]*b[0]+e[1]*b[1]
+  },
+  
+  // Megnitude of Vector2 [x,y]
+  mag : (e)=>{
+    return (e[0]**2+e[1]**2)**.5
+  },
+  
+  // Normalize the length of a Vector2 [x,y]
+  normalize : (e)=>{
+    let l=e[0]*Utils.sign(e[0])+e[1]*Utils.sign(e[1]);
+    return l==0 ? [0,0] : [e[0]/l,e[1]/l];
+  },
+  
+  // Linear blend Values together
+  lerp : (x,c,v)=>{
+    return x*(1-v) + c*v
+  },
+  
+  // Linear blend Vector2s together
+  lerpVec : (x,c,v)=>{
+    return [ Utils.lerp(x[0],c[0],v), Utils.lerp(x[1],c[1],v) ]
+  },
+  
+  // == == == == == == == == == == == == ==
+  
+  // -- -- -- -- -- -- -- -- --
+  // -- Color Functions - -- -- --
+  // -- -- -- -- -- -- -- -- -- -- --
 
-  componentToHex(c) {
-      var hex = c.toString(16);
+  // Convert Number to Hex
+  componentToHex : (c)=>{
+      let hex = c.toString(16);
       return hex.length == 1 ? "0" + hex : hex;
-  }
+  },
 
-  rgbToHex(rgb) {
-      return "#" + this.componentToHex(Math.min(255, Math.max(0,Math.round(rgb[0])))) + this.componentToHex(Math.min(255, Math.max(0,Math.round(rgb[1])))) + this.componentToHex(Math.min(255, Math.max(0,Math.round(rgb[2]))));
-  }
-  toHSV(RGB){
-    var r=RGB[0]/255;
-    var g=RGB[1]/255;
-    var b=RGB[2]/255;
-    var minv=Math.min(r,g,b);
-    var maxv=Math.max(r,g,b);
-    var H,S,V=maxv;
-    var d=maxv-minv;
+  // Convert RGB (0-255) to Hex Color (#RRGGBB)
+  rgbToHex : (rgb)=>{
+      return "#" + Utils.componentToHex(Math.min(255, Math.max(0,Math.round(rgb[0])))) + Utils.componentToHex(Math.min(255, Math.max(0,Math.round(rgb[1])))) + Utils.componentToHex(Math.min(255, Math.max(0,Math.round(rgb[2]))));
+  },
+  
+  
+  // Convert RGB (0-255) to Hue/Saturation/Value (HSV)
+  toHSV : (RGB)=>{
+    let fitMaxMult = 1/255
+    let r=RGB[0] * fitMaxMult;
+    let g=RGB[1] * fitMaxMult;
+    let b=RGB[2] * fitMaxMult;
+    let minv=Math.min(r,g,b);
+    let maxv=Math.max(r,g,b);
+    let H,S,V=maxv;
+    let d=maxv-minv;
     
     if(maxv != 0){
       S=d/maxv;
@@ -187,19 +161,20 @@ export default class Utils{
     }
     
     return [H,S,V];
-  }
+  },
 
-  toRGB(HSV){
-    var R,G,B;
-    var H=HSV[0];
-    var S=HSV[1];
-    var V=HSV[2];
+  // Convert Hue/Saturation/Value (HSV) to RGB (0-255)
+  toRGB : (HSV)=>{
+    let R,G,B;
+    let H=HSV[0];
+    let S=HSV[1];
+    let V=HSV[2];
     
-    var i=Math.floor(H*6);
-    var f=H*6-i;
-    var p=V*(1-S);
-    var q=V*(1-S*f);
-    var t=V*(1-S*(1-f));
+    let i=Math.floor(H*6);
+    let f=H*6-i;
+    let p=V*(1-S);
+    let q=V*(1-S*f);
+    let t=V*(1-S*(1-f));
     
     i=i%6;
     if(i == 0){
@@ -229,55 +204,206 @@ export default class Utils{
     }
 
     return [R*255,G*255,B*255];
-  }
+  },
+  
+  // == == == == == == == == == == == == ==
+  
+  // -- -- -- -- -- -- -- -- --
+  // -- Canvas Functions  -- -- --
+  // -- -- -- -- -- -- -- -- -- -- --
+  
+  // Draw Geometry
+  // Filled, Open Outline, Closed Outline, Composition Value 
+  // Supports -
+  // 'loc'; Location Array - [x,y] / [x1,y1,x2,y2,x3,y3,...,xN,yN]
+  // 'thickness'; Line Thickness / Filled -  '-1' will Fill the draw, any positive number will set Line Thickness
+  // 'comp'; Composition Type - See Canvas Context spec for values
+  //   https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
+  drawGeo : (loc,eCount,size,color,alpha,thickness,canvas,comp=null)=>{
+    let x=loc[0];
+    let y=loc[1];
+    let R=color[0];
+    let G=color[1];
+    let B=color[2];
+    let hex=Utils.rgbToHex([Math.floor(R),Math.floor(G),Math.floor(B)] );
+    let csW=canvas.width*.5;
+    let csH=canvas.height*.5;
+    
+    let draw=canvas.getContext('2d');
+    if( comp!=null ){
+      draw.globalCompositeOperation=comp;
+    }
 
-  gradientRunner(canvas,colorFrom,colorTo,runBlur){
-    var drawBG=canvas.getContext("2d");
-    var cW=canvas.width;
-    var cH=canvas.height;
+    let runCount=1;
+    draw.globalAlpha=alpha;
+    for(let c=0;c<runCount;c+=1){
+      draw.beginPath();
+      draw.lineWidth=Math.max(1,thickness);
+      if(thickness==-1){
+        draw.fillStyle=hex;
+      }else{
+        draw.strokeStyle=hex;
+      }
+      if(eCount<=2){
+        if(eCount==1){
+          let grad=draw.createRadialGradient((x-csW)+csW,(y-csH)+csH,1,(x-csW)+csW,(y-csH)+csH,size/2);
+          grad.addColorStop(0,'rgba('+Math.floor(color[0])+','+Math.floor(color[1])+','+Math.floor(color[2])+',1)');
+          if(color.length>4){
+            grad.addColorStop(1,'rgba('+Math.floor(color[3])+','+Math.floor(color[4])+','+Math.floor(color[5])+',0)');
+          }else{
+            grad.addColorStop(1,'rgba('+Math.floor(color[0])+','+Math.floor(color[1])+','+Math.floor(color[2])+',0)');
+          }
+          draw.fillStyle=grad;
+        }else if(eCount==2){
+          let grad=draw.createRadialGradient((x-csW)+csW,(y-csH)+csH,1,(x-csW)+csW,(y-csH)+csH,size/2);
+          grad.addColorStop(0,'rgba('+Math.floor(color[0])+','+Math.floor(color[1])+','+Math.floor(color[2])+',0)');
+          if(color.length>4){
+            grad.addColorStop(1,'rgba('+Math.floor(color[3])+','+Math.floor(color[4])+','+Math.floor(color[5])+',1)');
+          }else{
+            grad.addColorStop(1,'rgba('+Math.floor(color[0])+','+Math.floor(color[1])+','+Math.floor(color[2])+',1)');
+          }
+          draw.fillStyle=grad;
+        }
+        draw.arc((x-csW)+csW,(y-csH)+csH,size/2,0,Math.PI*2);
+      }else{
+        if(loc.length>2){
+          if(eCount==3){
+            draw.moveTo((x-csW)+csW,(y-csH)+csH);
+            //draw.moveTo(x,y);
+            for(let v=2; v<loc.length; v+=2){
+              draw.lineTo((loc[v]-csW)+csW,(loc[v+1]-csH)+csH);
+            }
+            draw.lineJoin = 'round';
+            if(size==1 && thickness!=-1){
+              draw.closePath();
+            }else{
+              draw.lineJoin = 'miter';
+            }
+          }else{
+            draw.lineJoin = 'round';
+            draw.moveTo((x-csW)+csW,(y-csH)+csH);
+            for(let v=2; v<loc.length; v+=4){
+              draw.quadraticCurveTo((loc[v]-csW)+csW,(loc[v+1]-csH)+csH, (loc[v+2]-csW)+csW,(loc[v+3]-csH)+csH);
+            }
+            if(size==1){
+              draw.quadraticCurveTo((loc[loc.length-2]-csW)+csW,(loc[loc.length-1]-csH)+csH, (loc[0]-csW)+csW,(loc[1]-csH)+csH);
+            }
+            /*
+            draw.moveTo(x,y);
+            for(let v=2; v<loc.length; v+=4){
+              draw.quadraticCurveTo(loc[v],loc[v+1], loc[v+2],loc[v+3]);
+            }
+            if(size==1){
+              draw.quadraticCurveTo(loc[loc.length-2],loc[loc.length-1], loc[0],loc[1]);
+            }*/
+            if(size==1 && thickness!=-1){
+              draw.closePath();
+            }else{
+              draw.lineJoin = 'miter';
+            }
+          }
+        }
+      }
+      if(thickness==-1){
+        draw.fill();
+      }else{
+        draw.stroke();
+      }
+    }
+  },
+
+  // HTML5 Canvas; Draw a Line
+  drawLine : (points,width,color,alpha,arcType,canvas,dash)=>{
+    let hex,draw;
+    let R=color[0];
+    let G=color[1];
+    let B=color[2];	
+    hex=rgbToHex([Math.floor(R),Math.floor(G),Math.floor(B)] );
+    if(typeof(canvas)==="string"){
+      draw=canvas.getContext('2d');
+    }else{
+      draw=canvas;
+    }
+    
+    draw.beginPath();
+    if(dash[0]!=-1){
+      draw.globalAlpha=alpha/2;
+    }
+    draw.strokeStyle=hex;
+    draw.lineWidth=width;
+    draw.moveTo(points[0],points[1]);
+    for(let x=2; x<(points.length); x+=2){
+      draw.lineTo(points[x],points[x+1]);
+    }
+    if(arcType==0){
+      arcType='round';
+    }else if(arcType==1){
+      arcType='miter';
+    }else if(arcType==2){
+      arcType='bevel';
+    }else{
+      arcType='round';
+    }
+    draw.lineJoin = arcType;
+    draw.lineCap = arcType;
+    draw.stroke();
+    if(dash[0]!=-1){
+      draw.globalAlpha=alpha;
+      draw.setLineDash(dash);
+      draw.stroke();
+    }
+  },
+
+  // Apply Gradient to a Canvas
+  gradientRunner : (canvas,colorFrom,colorTo,runBlur)=>{
+    let drawBG=canvas.getContext("2d");
+    let cW=canvas.width;
+    let cH=canvas.height;
 
     drawBG.rect(0, 0, cW, cH);
-    var grd = drawBG.createLinearGradient(0,0,cW,cH);
+    let grd = drawBG.createLinearGradient(0,0,cW,cH);
     grd.addColorStop(0, colorFrom);
     grd.addColorStop(1, colorTo);
     drawBG.fillStyle = grd;
     drawBG.fill();
 
     if(runBlur==1){
-      this.blurEffect(drawBG,drawBG,1,80,3);
-      //this.blurEffect(drawBG,drawBG,1,70,5);
+      Utils.blurEffect(drawBG,drawBG,1,80,3);
+      //Utils.blurEffect(drawBG,drawBG,1,70,5);
     }
-  }
-  blurEffect(input,output,fullCanvas,dist,levels){
+  },
+  
+  // Blur one Canvas and output its result into an Output Canvas ( Can be the same canvas )
+  blurEffect : (input,output,fullCanvas,dist,levels)=>{
     if(dist.constructor !== Array){
-      var tmpDist=dist;
+      let tmpDist=dist;
       dist = new Array();
       dist[0]=tmpDist;
       dist[1]=tmpDist;
     }
-    var cW;
-    var cH;
+    let cW;
+    let cH;
     if(typeof input == "string"){
-      var cn=document.getElementById(input);
+      let cn=document.getElementById(input);
       if( !cn ){
         console.warn("'blurEffect' cannot find Input Object ")
       }
       cW=cn.width;
       cH=cn.height;
-      var input=cn.getContext("2d");
+      let input=cn.getContext("2d");
       output=input;
     }else{
-      cW=this.State.sW;
-      cH=this.State.sH;
+      cW=input.width;
+      cH=input.height;
     }
-    //var canvas=document.getElementById(drawCanvas);
-    //var draw=canvas.getContext("2d");
+    //let canvas=document.getElementById(drawCanvas);
+    //let draw=canvas.getContext("2d");
     fader=input.getImageData(0,0,cW,cH);
     pix = fader.data;
-    var rx,ry,rpix,px,py,mather ;
-    var checker,rCalc,gCalc,bCalc,aCalc,stageX,stageY,mather,distCheck;
-    //var distCheck=4+4*Math.abs((Math.floor(this.State.runner/55)*55)%3+(dragTotal%this.State.touchChecker));
-    var startPix, endPix,rPix;
+    let rx,ry,rpix,px,py ;
+    let checker,rCalc,gCalc,bCalc,aCalc,stageX,stageY,mather;
+    
+    let startPix, endPix,rPix;
     let percer = 1;
     if(fullCanvas==1){
       startPix=0;
@@ -292,9 +418,9 @@ export default class Utils{
       }
     }
     levels=Math.max(1,levels);
-    var blendcount=0;
+    let blendcount=0;
     if(dist[0]>0 || dist[1]>0 || fullCanvas==1){
-      for (var i=startPix; i<endPix; i+=4) {
+      for (let i=startPix; i<endPix; i+=4) {
         if( ((i/4)%cW>parseInt(refreshWindow[0])-2 && (i/4)%cW<parseInt(refreshWindow[2])+1) || fullCanvas==1){
           if(pix[i+3]>0){
             blendcount=Math.max(1,levels/2);
@@ -304,7 +430,7 @@ export default class Utils{
             gCalc=pix[i+1]*blendcount;
             bCalc=pix[i+2]*blendcount;
             aCalc=pix[i+3]*blendcount;
-            for (var v=0; v<levels; ++v) {
+            for (let v=0; v<levels; ++v) {
               rx=Math.round(Math.random()*dist[0]-(dist[0]/2)+px);
               rx=Math.max(0,Math.min(rx,cW-1))-Math.max(0, rx-cW);
               
@@ -336,7 +462,7 @@ export default class Utils{
         }
       }
     }	
-    for (var i=startPix; i<endPix; i+=4) {
+    for (let i=startPix; i<endPix; i+=4) {
       if( ((i/4)%cW>parseInt(refreshWindow[0])-2 && (i/4)%cW<parseInt(refreshWindow[2])+1) || fullCanvas==1){
         if(pix[i+3]>0){
           blendcount=2;
@@ -397,4 +523,6 @@ export default class Utils{
     output.putImageData(fader, 0, 0);
   }
 }
+
+module.exports = Utils
 
