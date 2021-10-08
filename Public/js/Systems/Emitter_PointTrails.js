@@ -4,6 +4,14 @@ import PointTrail from "./Point_Trail.js"
 
 export default class Emitter_PointTrails extends EmitterBase{
   _type = "PointTrails"
+  _forces = []
+  get forces(){
+    return this._forces;
+  }
+  set forces( val ){
+    this._forces = val;
+  }
+  
   constructor(State){
     super(State)
   }
@@ -45,7 +53,7 @@ export default class Emitter_PointTrails extends EmitterBase{
           Math.sin(x*230+3434+len)*10,
           Math.sin(x*630+134+len)*10
         ]
-        let tmp=new PointTrail(this.State, x, pSeed, pointXY,pointVel,0,color,alpha,[],Math.floor(len));
+        let tmp=new PointTrail(this.State, x, pSeed, pointXY,pointVel,0,color,alpha,[],Math.floor(len), this.forces);
         this.points.push(tmp);
         this.updateCount()
       }
@@ -67,12 +75,12 @@ export default class Emitter_PointTrails extends EmitterBase{
       alpha=Math.min(1,Math.sin(pCount*234.353)*.3+.95);
       color=[ Math.sin(len*2633.24+23+this.time+pCount+len)*10+20, Math.sin(len*243.24+23+this.time+pCount+len)*20+45, Math.cos(len*235.24+23+this.time+pCount+len)*35+150];
     }
-    let tmp=new PointTrail(this.State, pCount, pSeed, [this.State.mouseX,this.State.mouseY],[Math.sin(pCount*230+this.time+3434+len)*10,Math.cos(pCount*630+this.time+134+len)*10],0,color,alpha,[],Math.floor(len));
+    let tmp=new PointTrail(this.State, pCount, pSeed, [this.State.mouseX,this.State.mouseY],[Math.sin(pCount*230+this.time+3434+len)*10,Math.cos(pCount*630+this.time+134+len)*10],0,color,alpha,[],Math.floor(len), this.forces);
     this.points.push(tmp);
     
     pCount += 1
     pSeed += 1
-    tmp=new PointTrail(this.State, pCount, pSeed, [this.State.mouseX,this.State.mouseY],[Math.sin(pCount*430+this.time+434+len)*10,Math.cos(pCount*30+this.time+2134+len)*10],0,color,alpha,[],Math.floor(len));
+    tmp=new PointTrail(this.State, pCount, pSeed, [this.State.mouseX,this.State.mouseY],[Math.sin(pCount*430+this.time+434+len)*10,Math.cos(pCount*30+this.time+2134+len)*10],0,color,alpha,[],Math.floor(len), this.forces);
     this.points.push(tmp);
     
     this.updateCount()

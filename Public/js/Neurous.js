@@ -1,6 +1,14 @@
+// NeurousNet - Neurous Class
+//  Created by Kevin Edzenga; October 2021
+//
+//  Neurous( *TargetCanvasId*, *BackgroundCanvas" )
+//  Prime controller of all emitter classes and interactivity events
+
+
 import State from "./State.js"
 //import Device from "./Device.js"
 import Utils from "./Utils.js"
+
 import Emitter_PointTrails from "./Systems/Emitter_PointTrails.js"
 import Emitter_Sparks from "./Systems/Emitter_Sparks.js"
 import Emitter_Fields from "./Systems/Emitter_Fields.js"
@@ -350,7 +358,11 @@ class Neurous{
   
   buildEmitters(){
     
+    let newtonsEmitter = new Emitter_Fields( State );
+    this.emitters.newtons.push( newtonsEmitter )
+    
     let pointTrailEmitter = new Emitter_PointTrails( State );
+    pointTrailEmitter.forces = newtonsEmitter.points;
     let count=(State.sW+State.sH)/50+25;
     pointTrailEmitter.scatterPoints( [State.sW, State.sH],count );
     this.emitters.pointTrails.push( pointTrailEmitter )
@@ -358,8 +370,6 @@ class Neurous{
     let sparksEmitter = new Emitter_Sparks( State );
     this.emitters.sparks.push( sparksEmitter )
     
-    let newtonsEmitter = new Emitter_Fields( State );
-    this.emitters.newtons.push( newtonsEmitter )
 
   }
     
@@ -481,7 +491,7 @@ class Neurous{
           }
           var thickness=3*curPoint.mousePerc * normSpeed;
           if( emitterType != "newtons" ){
-            this.Utils.drawGeo(curPoint.trail,3,size,pointColor,alpha,thickness,0,this.target,comp);
+            this.Utils.drawGeo([  ...curPoint.trail, ...curPoint.pos ],3,size,pointColor,alpha,thickness,0,this.target,comp);
           }
 
           if( emitterType != "sparks" ){

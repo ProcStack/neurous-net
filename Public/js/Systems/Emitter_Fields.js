@@ -15,10 +15,10 @@ export default class Emitter_Fields extends EmitterBase{
     let color=[0,0,0];
     let alpha=.6;
     let tmp=new PointNewton(this.State, this.count,this.time, [this.State.mouseX,this.State.mouseY],[Math.sin(this.time+this.count)*9,Math.cos(this.time+this.count)*9],90,color,alpha);
-    var sizeRand=Math.random(this.count)*10+20;
+    var sizeRand=Math.random(this.count+.3)*10+20;
     tmp.size=sizeRand;
     tmp.origSize=sizeRand;
-    tmp.weight=tmp.weight*sizeRand/30*.9+.1;
+    tmp.weight=(tmp.weight*.5+.5)*(sizeRand/20+.5);
     this.points.push(tmp);
 
     this.updateCount()

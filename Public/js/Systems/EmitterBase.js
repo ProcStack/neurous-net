@@ -30,7 +30,7 @@ export default class EmitterBase{
   
   updateTime(){
     let curTime = new Date().getTime();
-    this.time = curTime*.1;
+    this.time = curTime*.001;
   }
   
   updateCount(){

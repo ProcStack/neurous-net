@@ -1,3 +1,8 @@
+// NeurousNet; Kevin Edzenga
+//
+//  Device and Interaction States
+
+
 const State={
   sW : window.innerWidth,
   sH : window.innerHeight,

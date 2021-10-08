@@ -74,54 +74,63 @@ export default class Point{
     let force=[Math.sin(this.id*234+this.seed+35+this.pos[0]+this.age),Math.sin(this.id*1023+this.seed+1325+this.pos[1]+this.age)];
     this.addForce(force);
   }
-	addForce(force, clamp=0){
-		this.vel[0]+=force[0];
-		this.vel[1]+=force[1];
-		if((this.pos[0]+this.vel[0])<=0 || (this.pos[0]+this.vel[0])>=this.State.sW){
-			this.vel[0]=this.vel[0]*-1;
+	addForce( force, clamp=0 ){
+		this.vel[0] += force[0];
+		this.vel[1] += force[1];
+		if( (this.pos[0]+this.vel[0])<=0 || (this.pos[0]+this.vel[0])>=this.State.sW ){
+			this.vel[0] = this.vel[0]*-1;
 		}
-		if((this.pos[1]+this.vel[1])<=0 || (this.pos[1]+this.vel[1])>=this.State.sH){
-			this.vel[1]=this.vel[1]*-1;
+		if( (this.pos[1]+this.vel[1])<=0 || (this.pos[1]+this.vel[1])>=this.State.sH ){
+			this.vel[1] = this.vel[1]*-1;
 		}
 		if(clamp) this.clampVel();
 	}
-	setPos(poser){
-		this.pos=poser;
+	setPos( poser ){
+		this.pos = poser;
 		this.trail.push(this.pos[0]);
 		this.trail.push(this.pos[1]);
-		if(this.trail.length>this.tlen){
-			this.trail=this.trail.slice(2,this.trail.length);
+		if( this.trail.length>this.tlen ){
+			this.trail = this.trail.slice(2,this.trail.length);
 		}
 	}
 	checkFieldPosition(){
-		this.pos[0]=Math.min(Math.max(0,this.pos[0]+this.vel[0]),this.State.sW);
-		this.pos[1]=Math.min(Math.max(0,this.pos[1]+this.vel[1]),this.State.sH);
-		if(this.pos[0]<=0 || this.pos[0]>=this.State.sW){
-			this.vel[0]=this.vel[0]*(Math.sin(this.id*4025+this.age+self.id)*.2-1);
-			this.bounce=1;
-		}
-		if(this.pos[1]<=0 || this.pos[1]>=this.State.sH){
-			this.vel[1]=this.vel[1]*(Math.sin(this.id*405+this.age+self.id)*.2-1);
-			this.bounce=1;
-		}
+    let padding = 0;
+    let maxWH = [ this.State.sW-padding, this.State.sH-padding ]
+    let toPos = [ ...this.pos ]
+		toPos[0] = Math.min( Math.max(padding, toPos[0]+this.vel[0]), maxWH[0] );
+		toPos[1] = Math.min( Math.max(padding, toPos[1]+this.vel[1]), maxWH[1] );
+		if( toPos[0]<=padding || toPos[0]>=maxWH[0] ){
+      this.pos[0] = toPos[0];
+			this.vel[0] = -this.vel[0];//*(Math.sin(this.id*4025+this.age+self.id)*.2-1);
+			this.bounce = 1;
+		}else{
+      this.pos[0] += this.vel[0];
+    }
+		if( toPos[1]<=padding || toPos[1]>=maxWH[1] ){
+      this.pos[1] = toPos[1];
+			this.vel[1] = -this.vel[1];//*(Math.sin(this.id*405+this.age+self.id)*.2-1);
+			this.bounce = 1;
+		}else{
+      this.pos[1] += this.vel[1];
+    }
 	}
 	setVel(veler, clamp=0){
-		this.vel[0]=veler[0];
-		this.vel[1]=veler[1];
+		this.vel[0] = veler[0];
+		this.vel[1] = veler[1];
 		if(clamp) this.clampVel();
 	}
-	clampVel(addWeight=0){
-		var tmpVel=[...this.vel];
-		var scaler=(tmpVel[0]**2+tmpVel[1]**2)**.5;
-		scaler=scaler>this.velMagCap ? this.velMagCap/scaler : 1;
-		tmpVel[0]*=scaler;
-		tmpVel[1]*=scaler;
+	clampVel( addWeight=0 ){
+		var tmpVel = [...this.vel];
+		var scaler = (tmpVel[0]**2+tmpVel[1]**2)**.5;
+		scaler = scaler>this.velMagCap ? this.velMagCap/scaler : 1;
+		tmpVel[0] *= scaler;
+		tmpVel[1] *= scaler;
 		
 		this.vel=tmpVel;
 	}
-	bounce(val){
-		if(val==0){
-			this.bounce=0;
+	bounce( val ){
+		if( val == 0 ){
+			this.bounce = 0;
 		}else{
 			return this.bounce;
 		}

@@ -1,3 +1,10 @@
+// NeurousNet - Utilities Class
+//  Created by Kevin Edzenga; October 2021
+//
+//  Neurous( *State.js Object* )
+//  Common HTML5 Canvas & Math Functions
+
+
 export default class Utils{
   constructor(State){
     this.State = State    
