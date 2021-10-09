@@ -591,7 +591,7 @@ class Neurous{
           }
 
           draw.globalCompositeOperation = "source-over"
-          if( emitterType != "sparks" ){
+          if( emitterType == "newtons" ){
             draw.beginPath();
             if(false && !State.mobile) draw.globalCompositeOperation=comp;
             draw.fillStyle=Utils.rgbToHex(pointColor);

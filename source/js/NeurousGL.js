@@ -81,20 +81,9 @@ class NeurousGL{
     this.scene.background = new THREE.Color(bgCdHex);//pxlEnv.fogColor;
     this.scene.renderTarget=new THREE.WebGLRenderTarget( cnW*.5, cnH*.5, options);
     this.scene.renderTarget.texture.format=THREE.RGBAFormat;
-    this.scene.renderTarget.texture.minFilter=THREE.LinearFilter;
-    this.scene.renderTarget.texture.magFilter=THREE.LinearFilter;
+    this.scene.renderTarget.texture.minFilter=THREE.LinearFilter; // THREE.NearestFilter;
+    this.scene.renderTarget.texture.magFilter=THREE.LinearFilter; // THREE.NearestFilter;
     this.scene.renderTarget.texture.generateMipmaps=false;
-    
-    // this.scene.renderTarget.depthBuffer=true;
-    // this.scene.renderTarget.depthTexture = new THREE.DepthTexture();
-    // this.scene.renderTarget.depthTexture.format=THREE.DepthFormat;
-    // this.scene.renderTarget.depthTexture.type=THREE.UnsignedIntType;
-    
-    // this.scene.renderWorldPos=new THREE.WebGLRenderTarget( cnW, cnH, options);
-    // this.scene.renderWorldPos.texture.format=THREE.RGBAFormat;
-    // this.scene.renderWorldPos.texture.minFilter=THREE.NearestFilter;
-    // this.scene.renderWorldPos.texture.magFilter=THREE.NearestFilter;
-    // this.scene.renderWorldPos.texture.generateMipmaps=false;
     
     
     this.camera=new THREE.PerspectiveCamera( this.cameraOptions.fov, this.cameraOptions.aspect, this.cameraOptions.clipping.near, this.cameraOptions.clipping.far);
@@ -184,24 +173,12 @@ class NeurousGL{
     this.shaderPasses.scatterMixShaderPass.material.transparent = true
 		this.composer.addPass( this.shaderPasses.scatterMixShaderPass );
     
-    
-    
-    
-		this.shaderPasses.bloomShaderPass = new UnrealBloomPass(
-              this.resWH.clone().multiplyScalar(.5),
-              .18,
-              0.8,
-              0.7 );
-		//this.shaderPasses.bloomShaderPass.threshold = this.pxlRenderSettings.bloomThresh;
-		//this.shaderPasses.bloomShaderPass.strength = this.pxlRenderSettings.bloomStrength;
-		//this.shaderPasses.bloomShaderPass.radius = this.pxlRenderSettings.bloomRadius;
-		//this.composer.addPass( this.shaderPasses.bloomShaderPass );
 		
 		// -- -- -- -- -- -- -- -- -- -- //
 		
 		
 		//this.composer.addPass( this.shaderPasses.blurShaderPass );
-		this.shaderPasses.bloomShaderPass.enabled=true;
+		//this.shaderPasses.bloomShaderPass.enabled=true;
 		//this.mapOverlayPass.autoClear=true;
 		//this.mapOverlaySlimPass.enabled=false;
   }
@@ -209,8 +186,23 @@ class NeurousGL{
   resize(){
     let cnW = this.canvas.width
     let cnH = this.canvas.height
+    console.log(cnW,cnH)
     
-    this.resUV = new THREE.Vector2( 1/cnW, 1/cnH );
+    this.resWH.set( cnW, cnH );
+    this.resUV.set( 1/cnW, 1/cnH );
+    
+    this.engine.setSize( cnW, cnH );
+    this.scene.renderTarget.setSize( cnW*.5, cnH*.5);
+    
+    
+    this.pointTexture = new THREE.CanvasTexture(this.source);
+    this.pointTexture.needsUpdate = true;
+    this.pointTexture.format=THREE.RGBAFormat;
+    
+    let shaderKeys = Object.keys( this.shaderPasses )
+    shaderKeys.forEach( (s)=>{
+      this.shaderPasses[s].material.uniforms.pDiffuse.value = this.pointTexture;
+    })
   }
   
   render( time ){
