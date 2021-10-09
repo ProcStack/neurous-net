@@ -49,8 +49,9 @@ getFileVersions() // Just so there is something there if browserify hasn't compl
 
 // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-if( process.env.NODE_ENV ){
+if( process.env.NODE_ENV != "production" ){
   
+  const {exec} = require("child_process")
   const FileManager = require("./modules/FileManager.js");
   const FileLister = new FileManager();
 
@@ -63,13 +64,12 @@ if( process.env.NODE_ENV ){
   neurousCSS.on('update', runUglifyCSS);
 
   function runBrowserify () {
-    const {exec} = require("child_process")
     let inputFile = "source/js/Neurous.js"
     let outputFile = "Public/js/Neurous.min.js"
-    let cmd = `browserify ${inputFile} | uglifyjs -cm --mangle toplevel > ${outputFile}`
+    let cmd = `browserify ${inputFile} -t [ babelify --presets [ @babel/preset-env @babel/preset-react ] --plugins [ @babel/plugin-transform-class-properties ] ] | uglifyjs -cm --mangle toplevel > ${outputFile}`
 
     let startTime = Date.now()
-    exec(cmd, (err)=>{
+    exec(cmd, (err, out)=>{
       let endTime = Date.now()
       let durationTime = endTime - startTime
       console.log("-- -- -- --")
@@ -91,6 +91,8 @@ if( process.env.NODE_ENV ){
     let inputFileCSS = "source/style/Neurous.css"
     let outputFileCSS = "Public/style/Neurous.min.css"
     let cmdCSS = `uglifycss ${inputFileCSS} > ${outputFileCSS}`
+    
+    let startTime = Date.now()
     exec(cmdCSS, (err)=>{
       let endTime = Date.now()
       let durationTime = endTime - startTime
@@ -129,9 +131,9 @@ if( process.env.NODE_ENV ){
 app.set('view engine', 'ejs');
 
 //Setup folders
-app.use( express.static(path.join(__dirname, '/Public')) );
-//app.use( express.static(path.join(__dirname, '/Build')) );
-//app.use('/images', express.static(path.join(__dirname, '/Source/images')) );
+//app.use( express.static(path.join(__dirname, '/Public')) );
+app.use( express.static(path.join(__dirname, '/source')) );
+//app.use( '/libs', express.static(path.join(__dirname, '/node_modules')) );
 //app.use('/js', express.static(path.join(__dirname, '/Source/js')) );
 //app.use('/style', express.static(path.join(__dirname, '/Source/style')) );
 

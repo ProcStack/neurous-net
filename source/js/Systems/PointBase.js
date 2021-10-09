@@ -1,6 +1,5 @@
 
 class Point{
-  _type = "Point"
   get type() {
     return this._type
   }
@@ -10,6 +9,7 @@ class Point{
 
   // TODO : Points should know their Emitter; Variables treated as Uniforms ( Time, overall scale Velocity maybe )
   constructor(State, id,seed,pos,vel,age,color,alpha){
+    this._type = "Point"
     this.State = State
 		this.id = id
     this.seed = seed
@@ -163,4 +163,4 @@ class Point{
 	}
 }
 
-module.exports = Point
+export default Point

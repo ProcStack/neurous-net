@@ -16,11 +16,12 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
-  <meta name='theme-color' content='#002832'>
+  <meta name='theme-color' content='#000822'>
 </head>
-<link type="text/css" rel="stylesheet" href="style/Neurous.min.css?v=<%= cssVersion %>">
+<link type="text/css" rel="stylesheet" href="style/Neurous.css?v=<%= cssVersion %>">
 
 <body>
+  <canvas id="NeurousGLCanvas" height='1' width='1' style='z-index:3;position:fixed;top:0px;left:0px;touch-action:none;' ></canvas>
   <canvas id="markerCanvas" height='1' width='1' style='z-index:2;position:fixed;top:0px;left:0px;touch-action:none;' ></canvas>
   <canvas id="bkCanvas" height='1' width='1' style='z-index:0;position:fixed;top:0px;left:0px;'></canvas>
   
@@ -36,6 +37,6 @@
     </div>
   </div>
   
-	<script type="module" src="js/Neurous.min.js?v=<%= jsVersion %>"></script>
+	<script type="module" src="js/Neurous.js?v=<%= jsVersion %>"></script>
 </body>
 </html>

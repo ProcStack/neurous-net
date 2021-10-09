@@ -6,6 +6,7 @@
 //
 //  Next Steps (In Order); October 8th, 2021 -
 //    Move Device specific event handlers & discovery to Device.js class
+//    Remove State where possible
 //    WebGL & HTML5 Canvas Draws
 //    | Converting system to be Renderer Agnostic
 //    |   Set the Renderer to WebGL or HTML5 Canvas Draws
@@ -15,18 +16,23 @@
 //    |   Delete Point Object -vs- Update Shader Uniforms -> Rebuild Mesh
 //    Scoring System
 //    Multiplayer Support over Socket Server
-//sdf
+//
 
-const State = require( "./State.js" )
-//const Device = require( "./Device.js" )
-const Utils = require( "./Utils.js" )
+import State from "./State.js" 
+//import Device from "./Device.js" 
+import Utils from "./Utils.js" 
+import NeurousGL from "./NeurousGL.js" 
 
-const Emitter_PointTrails = require( "./Systems/Emitter_PointTrails.js" )
-const Emitter_Sparks = require( "./Systems/Emitter_Sparks.js" )
-const Emitter_Fields = require( "./Systems/Emitter_Fields.js" )
+import Emitter_PointTrails from "./Systems/Emitter_PointTrails.js" 
+import Emitter_Sparks from "./Systems/Emitter_Sparks.js" 
+import Emitter_Fields from "./Systems/Emitter_Fields.js" 
 
 class Neurous{
-  constructor(target, background){
+  constructor(target, targetgl, background){
+    
+    this.startTime = Date.now()*.001
+    this.elapsedTime = 0
+    
     //this.Device = new Device();
     this.emitters={
       pointTrails:[],
@@ -62,7 +68,10 @@ class Neurous{
     this.verboseTarget = null;
     
     this.target = target
+    this.targetgl = targetgl
     this.background = background
+    
+    this.NeurousGL = null;
     
     this.sparkCount=10
   }
@@ -82,6 +91,8 @@ class Neurous{
     this.buildEventListeners()
     
     this.buildCanvas()
+    
+    this.buildRendererGL()
     
     this.buildEmitters()
 
@@ -281,6 +292,10 @@ class Neurous{
     State.sH=window.innerHeight;
     this.buildCanvas()
     
+    if( this.NeurousGL ){
+      this.NeurousGL.resize()
+    }
+    
     let introCards=document.getElementById('introCards');
     let wSize=introCards.offsetWidth;
     let introInner=document.getElementById('introCardsInner');
@@ -347,19 +362,35 @@ class Neurous{
     if( typeof(this.target) == "string" ){
       this.target = document.getElementById( this.target )
     }
+    if( typeof(this.targetgl) == "string" ){
+      this.targetgl = document.getElementById( this.targetgl )
+    }
     if( typeof(this.background) == "string" ){
       this.background = document.getElementById( this.background )
     }
     
     this.target.width=State.sW;
     this.target.height=State.sH;
+    this.targetgl.width=State.sW;
+    this.targetgl.height=State.sH;
     this.background.width=State.sW;
     this.background.height=State.sH;
     
-    Utils.gradientRunner(this.background,Utils.rgbToHex([0,40,50]),Utils.rgbToHex([0,10,30]),0);
+    Utils.gradientRunner(this.background,Utils.rgbToHex([0,20,50]),Utils.rgbToHex([0,5,20]),0);
     
     this.target.focus();
     this.target.onfocusout=()=>{ this.target.focus(); };
+  }
+  
+  // -- -- -- -- --
+  
+  
+    
+  buildRendererGL(){
+    
+    this.NeurousGL = new NeurousGL( this.targetgl, this.target );
+    this.NeurousGL.init()
+    
   }
   
   // -- -- -- -- --
@@ -497,9 +528,16 @@ class Neurous{
     }
   }
   
+  stepClock(){
+    let curTime = Date.now()*.001
+    curTime = curTime - this.startTime
+    this.elapsedTime = curTime
+  }
+  
   runCanvas(){
     
-    State.runner+=1;
+    this.stepClock()
+    
     let draw=this.target.getContext('2d');
     draw.clearRect(0,0,State.sW,State.sH);
 
@@ -534,7 +572,7 @@ class Neurous{
           //let compers=['lighter', 'overlay','lighter', 'screen','lighter','overlay'];
           let compers=['lighter', 'lighter', 'screen','lighter'];
           let comp=null;
-          if( !State.mobile ){
+          if( true || !State.mobile ){
             comp = compers[curPoint.id%compers.length];
           }
           let normSpeed=(curPoint.speed/120+1);
@@ -552,9 +590,10 @@ class Neurous{
             Utils.drawGeo([  ...curPoint.trail, ...curPoint.pos ],3,size,pointColor,alpha,thickness,this.target,comp);
           }
 
+          draw.globalCompositeOperation = "source-over"
           if( emitterType != "sparks" ){
             draw.beginPath();
-            if(!State.mobile) draw.globalCompositeOperation=comp;
+            if(false && !State.mobile) draw.globalCompositeOperation=comp;
             draw.fillStyle=Utils.rgbToHex(pointColor);
             draw.globalAlpha=curPoint.alpha;
             let scaler=(curPoint.size+curPoint.mousePerc)*normSpeed;
@@ -563,7 +602,7 @@ class Neurous{
             if(curPoint.size>3  && !State.mobile){
               draw.beginPath();
               
-              if(!State.mobile) draw.globalCompositeOperation=comp;
+              if(false && !State.mobile) draw.globalCompositeOperation=comp;
               draw.fillStyle=Utils.rgbToHex(pointColor);
               draw.globalAlpha=.35;
               scaler=curPoint.size+curPoint.mousePerc;
@@ -573,7 +612,7 @@ class Neurous{
               if(curPoint.size>6){
                 draw.beginPath();
                 
-                if(!State.mobile) draw.globalCompositeOperation=comp;
+                if(false && !State.mobile) draw.globalCompositeOperation=comp;
                 draw.fillStyle=Utils.rgbToHex(pointColor);
                 draw.globalAlpha=.12;
                 scaler=curPoint.size+curPoint.mousePerc;
@@ -587,7 +626,9 @@ class Neurous{
       });
     }
     
-    //this.neuroComposer.render()
+    if( this.NeurousGL ){
+      this.NeurousGL.render( this.elapsedTime )
+    }
     // let score=document.getElementById("score_val");
     // if( score ){
     //   score.innerHTML = parseInt(parseInt(score.innerHTML)+scoreAdd)
@@ -600,6 +641,6 @@ class Neurous{
 }
 
 window.addEventListener("load", ()=>{
-  const NeurousNet = new Neurous( "markerCanvas", "bkCanvas" );
+  const NeurousNet = new Neurous( "markerCanvas", "NeurousGLCanvas", "bkCanvas" );
   NeurousNet.init();
 })

@@ -1,11 +1,11 @@
 
-const EmitterBase = require( "./EmitterBase.js" )
-const PointSpark = require( "./Point_Spark.js" )
+import EmitterBase from  "./EmitterBase.js" 
+import PointSpark from  "./Point_Spark.js" 
 
 class Emitter_Sparks extends EmitterBase{
-  _type = "Sparks"
   constructor(State){
     super(State)
+    this._type = "Sparks"
   }
   
   
@@ -13,7 +13,7 @@ class Emitter_Sparks extends EmitterBase{
 		for(let c=0;c<count;++c){
 			let seed = ((this.time+c)*12334.53) % 1000;
       let pCount = this.curId
-			let len = Math.sin(this.State.runner*23.24+23+seed+pCount)*3+4;
+			let len = Math.sin(this.runner*23.24+23+seed+pCount)*3+4;
       
 			let color = [
                   Math.sin(len*23.24+23+seed+pCount+len)*10+35,
@@ -37,4 +37,4 @@ class Emitter_Sparks extends EmitterBase{
   }
 }
 
-module.exports = Emitter_Sparks
+export default Emitter_Sparks

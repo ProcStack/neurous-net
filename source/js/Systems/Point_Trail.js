@@ -1,12 +1,11 @@
 
-const Utils = require( "../Utils.js" )
-const Point = require( "./PointBase.js" )
+import Utils from  "../Utils.js" 
+import Point from  "./PointBase.js" 
 
 class PointTrail extends Point{
-   _type = "PointTrail"
-
   constructor( State, id,seed,pos,vel,lifeSpan,color,alpha,trail,tlen, forces){
     super( State, id,seed,pos,vel,lifeSpan,color,alpha )
+    this._type = "PointTrail"
     
     
     this.weight *= (1-this.weight*.5)
@@ -75,7 +74,7 @@ class PointTrail extends Point{
     let mScale = 400+(this.State.sW+this.State.sH)*.1;
     let mScaleWH = [ this.State.mouseX/mScale, this.State.mouseY/mScale ];
     let idSeedInf = this.id * 75.1579 + 5014 + this.seed;
-    let runnerScale = this.State.runner/30;
+    let runnerScale = this.age/30;
     let pi = 3.14159265358979
     let magNoise = this.id/3+this.age/3
     
@@ -242,4 +241,4 @@ class PointTrail extends Point{
 	}
 }
 
-module.exports = PointTrail
+export default PointTrail

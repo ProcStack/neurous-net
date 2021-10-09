@@ -1,12 +1,12 @@
 
-const EmitterBase = require( "./EmitterBase.js" )
-const PointNewton = require( "./Point_Newton.js" )
+import EmitterBase from  "./EmitterBase.js" 
+import PointNewton from  "./Point_Newton.js" 
 
 class Emitter_Fields extends EmitterBase{
-  _type  =  "Fields"
   
   constructor(State){
     super(State)
+    this._type  =  "Fields"
   }
   
   genPoint( xy ){
@@ -46,4 +46,4 @@ class Emitter_Fields extends EmitterBase{
   }
 }
 
-module.exports = Emitter_Fields
+export default Emitter_Fields

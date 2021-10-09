@@ -1,159 +1,223 @@
-  
+// import * as THREE from "../../node_modules/three/build/three.module.js" 
+// import { EffectComposer } from  '../../node_modules/three/examples/jsm/postprocessing/EffectComposer.js' 
+// import { RenderPass } from  '../../node_modules/three/examples/jsm/postprocessing/RenderPass.js' 
+// import { ShaderPass } from  '../../node_modules/three/examples/jsm/postprocessing/ShaderPass.js' 
+import * as THREE from "../libs/three/build/three.module.js" 
+import { EffectComposer } from  '../libs/three/examples/jsm/postprocessing/EffectComposer.js' 
+import { RenderPass } from  '../libs/three/examples/jsm/postprocessing/RenderPass.js' 
+import { ShaderPass } from  '../libs/three/examples/jsm/postprocessing/ShaderPass.js' 
+import { UnrealBloomPass } from '../../libs/three/examples/jsm/postprocessing/UnrealBloomPass.js'
+
+import Shaders from  "./Shaders/Shaders.js" 
+
+
 class NeurousGL{
-  constructor(){
+  constructor(target, source){
+    this.engine = null
+    this.composer = null
+    this.canvas = target
+    this.scene = null
+    
+    this.resWH = null;
+    this.resUV = null;
+    
+    this.time=null;
+    
+    this.textureLoader = null
+    this.textures = {}
+    
+    this.source = source
+    this.pointTexture = null
+    
+    this.shaderPasses = {}
+    
+    this.cameraOptions = {
+      fov : 70,
+      aspect : 1,
+      clipping : {
+        near : .1,
+        far : 10
+      }
+    }
   }
   
-  mapBootEngine(){ 
+  init(){
     // Rederer
-    pxlEnv.engine=new THREE.WebGLRenderer({
-      canvas: pxlGuiDraws.mapCanvas,
-      //alpha:true,
+    this.engine=new THREE.WebGLRenderer({
+      canvas: this.canvas,
+      alpha:true,
       antialias: false,
-      sortObjects:true,
-      depth:true,
+      sortObjects:false,
+      depth:false,
       //logarithmicDepthBuffer:true,
     });
     var options = {
       format : THREE.RGBAFormat,
       antialias: false,
-      sortObjects:true,
-      alpha:false,
+      sortObjects:false,
+      alpha:true,
       type : /(iPad|iPhone|iPod)/g.test(navigator.userAgent) ? THREE.HalfFloatType : THREE.FloatType
     };
-    pxlEnv.engine.autoClear=true;
+    this.engine.autoClear=true;
       
-    pxlEnv.engine.debug.checkShaderErrors=false;
-    //%= Dev
-    pxlEnv.engine.debug.checkShaderErrors=true;
-    //%
+    this.time = new THREE.Vector2(0,0);
     
-    if(verbose){
-      if(pxlEnv.engine.extensions.get('WEBGL_depth_texture')){
-        console.log("  ** WebGL Depth Texture support enabled **");
-      }else{
-        console.log("  ** WebGL Depth Texture NOT supported **");
-      }
-      console.log("-- Depth Composer pass currently not used, --");
-      console.log("  -- A future technology for Metal Asylum --");
-    }
     let bgCd=0x000000;
     let bgCdHex="#000000";
-    pxlEnv.engine.setClearColor(pxlEnv.fogColor, 0);
-    //pxlEnv.engine.setPixelRatio(window.devicePixelRatio);
-    //pxlEnv.engine.setSize(mapW/pxlQuality.screenResPerc, mapH/pxlQuality.screenResPerc);
-    pxlEnv.engine.setPixelRatio(1);
-    pxlEnv.engine.setSize(1024, 1024);
-    //pxlEnv.engine.gammaOutput=true;
-    //pxlEnv.engine.gammaFactor=3.2;
-    //pxlEnv.engine.outputEncoding=THREE.sRGBEncoding;
-    pxlEnv.engine.outputEncoding=THREE.GammaEncoding;
+    this.engine.setClearColor(bgCd, 0);
+    this.engine.setPixelRatio(1);
     
-    // Build render targets for depth and world space reference
-    // ## Can be pulled at Render Pass
-    pxlEnv.scene=new THREE.Scene();
-      //pxlEnv.scene.fog=new THREE.Fog(0x555555, 100, 5000);
-      pxlEnv.scene.fog=pxlEnv.fog;
+    let cnW = this.canvas.width
+    let cnH = this.canvas.height
+    
+    this.resWH = new THREE.Vector2( cnW, cnH );
+    this.resUV = new THREE.Vector2( 1/cnW, 1/cnH );
+    
+    this.engine.setSize( cnW, cnH );
+    this.engine.outputEncoding=THREE.GammaEncoding;
+    
+    this.scene=new THREE.Scene();
       
-    //pxlEnv.scene.background = new THREE.Color(bgCdHex);
-    pxlEnv.scene.background = new THREE.Color(bgCdHex);//pxlEnv.fogColor;
-    pxlEnv.scene.renderTarget=new THREE.WebGLRenderTarget(sW*pxlQuality.screenResPerc,sH*pxlQuality.screenResPerc,options);
-    pxlEnv.scene.renderTarget.texture.format=THREE.RGBAFormat;
-    pxlEnv.scene.renderTarget.texture.minFilter=THREE.LinearFilter;
-    pxlEnv.scene.renderTarget.texture.magFilter=THREE.LinearFilter;
-    pxlEnv.scene.renderTarget.texture.generateMipmaps=false;
-    //pxlEnv.scene.renderTarget.texture.type=THREE.FloatType;
-    pxlEnv.scene.renderTarget.depthBuffer=true;
-    pxlEnv.scene.renderTarget.depthTexture = new THREE.DepthTexture();
-    pxlEnv.scene.renderTarget.depthTexture.format=THREE.DepthFormat;
-    pxlEnv.scene.renderTarget.depthTexture.type=THREE.UnsignedIntType;
-    //pxlEnv.scene.renderTarget.depthTexture.type=THREE.UnsignedShortType;
-    pxlEnv.scene.renderWorldPos=new THREE.WebGLRenderTarget(sW*pxlQuality.screenResPerc,sH*pxlQuality.screenResPerc,options);
-    pxlEnv.scene.renderWorldPos.texture.format=THREE.RGBAFormat;
-    pxlEnv.scene.renderWorldPos.texture.minFilter=THREE.NearestFilter;
-    pxlEnv.scene.renderWorldPos.texture.magFilter=THREE.NearestFilter;
-    pxlEnv.scene.renderWorldPos.texture.generateMipmaps=false;
+    this.scene.background = new THREE.Color(bgCdHex);//pxlEnv.fogColor;
+    this.scene.renderTarget=new THREE.WebGLRenderTarget( cnW*.5, cnH*.5, options);
+    this.scene.renderTarget.texture.format=THREE.RGBAFormat;
+    this.scene.renderTarget.texture.minFilter=THREE.LinearFilter;
+    this.scene.renderTarget.texture.magFilter=THREE.LinearFilter;
+    this.scene.renderTarget.texture.generateMipmaps=false;
     
-    /*pxlEnv.warpZoneRenderTarget=new THREE.WebGLRenderTarget(1024,1024,options);
-    pxlEnv.warpZoneRenderTarget.texture.format=THREE.RGBFormat;
-    pxlEnv.warpZoneRenderTarget.texture.minFilter=THREE.LinearFilter;
-    pxlEnv.warpZoneRenderTarget.texture.magFilter=THREE.LinearFilter;
-    pxlEnv.warpZoneRenderTarget.texture.generateMipmaps=false;*/
+    // this.scene.renderTarget.depthBuffer=true;
+    // this.scene.renderTarget.depthTexture = new THREE.DepthTexture();
+    // this.scene.renderTarget.depthTexture.format=THREE.DepthFormat;
+    // this.scene.renderTarget.depthTexture.type=THREE.UnsignedIntType;
     
-    var aspectRatio=pxlGuiDraws.mapCanvas.width/pxlGuiDraws.mapCanvas.height;
-      // To change the near and far, see Environment .init()
-    pxlCamera.camera=new THREE.PerspectiveCamera( pxlEnv.pxlCamFOV, 1, pxlEnv.camNear, pxlEnv.camFar);
-      pxlAutoCam.camera=pxlCamera.camera;
+    // this.scene.renderWorldPos=new THREE.WebGLRenderTarget( cnW, cnH, options);
+    // this.scene.renderWorldPos.texture.format=THREE.RGBAFormat;
+    // this.scene.renderWorldPos.texture.minFilter=THREE.NearestFilter;
+    // this.scene.renderWorldPos.texture.magFilter=THREE.NearestFilter;
+    // this.scene.renderWorldPos.texture.generateMipmaps=false;
+    
+    
+    this.camera=new THREE.PerspectiveCamera( this.cameraOptions.fov, this.cameraOptions.aspect, this.cameraOptions.clipping.near, this.cameraOptions.clipping.far);
+
       
-      //pxlEnv.listener = new THREE.AudioListener();
-      //pxlCamera.camera.add( pxlEnv.listener );
-      
-    //pxlCamera.camera.position.set(-20,0,15);
-    pxlCamera.cameraAimTarget=new THREE.Object3D();
-    pxlEnv.scene.add(pxlCamera.cameraAimTarget);
-    pxlCamera.camera.target=pxlCamera.cameraAimTarget;
+    // this.camera.position.set(-20,0,15);
+    // this.cameraAimTarget=new THREE.Object3D();
+    // this.scene.add(pxlCamera.cameraAimTarget);
     
-    //pxlEnv.roomSceneList[pxlEnv.mainRoom]=pxlEnv;
     
-    //pxlCamera.camera.layers.enable(0);
-    pxlCamera.camera.layers.enable(1);
-    pxlCamera.camera.layers.enable(2);
+    //this.camera.layers.enable(0);
       
       
-    pxlEnv.scene.add( pxlEnv.userAvatarGroup );
-    
-  ///////////////////////////////////////////////////
-  // -- FILE I/O & Shared Assets -- -- -- -- -- -- //
-  ///////////////////////////////////////////////////
+      
     // Texture needs
-    pxlUtils.texLoader=new THREE.ImageLoader();
+    this.textureLoader=new THREE.ImageLoader();
     
-    cloud3dTexture=pxlUtils.loadTexture(assetRoot+"cloud3d.jpg");
-    //cloud3dTexture.wrapS=THREE.RepeatWrapping;
-    //cloud3dTexture.wrapT=THREE.RepeatWrapping;
-    cloud3dTexture.wrapS=THREE.MirroredRepeatWrapping;
-    cloud3dTexture.wrapT=THREE.MirroredRepeatWrapping;
-    cloud3dTexture.repeat.set(5,5);
+    //cloud3dTexture=this.textureLoader.loadTexture(assetRoot+"cloud3d.jpg");
+    ////cloud3dTexture.wrapS=THREE.RepeatWrapping;
+    ////cloud3dTexture.wrapT=THREE.RepeatWrapping;
+    // cloud3dTexture.wrapS=THREE.MirroredRepeatWrapping;
+    // cloud3dTexture.wrapT=THREE.MirroredRepeatWrapping;
+    // cloud3dTexture.repeat.set(5,5);
     
-    cloud3dTexture.minFilter=THREE.LinearFilter;
-    cloud3dTexture.magFilter=THREE.LinearFilter;
-    pxlEnv.cloud3dTexture=cloud3dTexture;
+    // cloud3dTexture.minFilter=THREE.LinearFilter;
+    // cloud3dTexture.magFilter=THREE.LinearFilter;
+    // this.cloud3dTexture=cloud3dTexture;
+    
+    this.pointTexture = new THREE.CanvasTexture(this.source);
+    this.pointTexture.needsUpdate = true;
+    this.pointTexture.format=THREE.RGBAFormat;
+    
+    this.buildComposers()
   }
   
   buildComposers(){
-		this.mapOverlaySlimPass = new ShaderPass(
+    
+		this.composer = new EffectComposer(this.engine);
+    
+		this.shaderPasses.blurXShaderPass = new ShaderPass(
 			new THREE.ShaderMaterial( {
 				uniforms: {
-					exposure:{type:"f",value:this.pxlRenderSettings.exposure},
-					time:{ value:this.pxlTimer.msRunner },
-                    camPos: { value: this.pxlCamera.camera.position },
-					ratio:{ type:'f',value: 1 },
+					time:{ value:this.time },
 					tDiffuse: { value: null },
-					rDiffuse: { value: this.scene.renderTarget.texture },
-					bloomTexture: { value: this.mapComposerGlow.renderTarget2.texture },
-					sceneDepth: { value: this.scene.renderTarget.depthTexture },
-					fogMult: { value: this.fogMult },
-					proximityMult: { value: this.pxlAvatars.proximityMult },
-					//bloomTexture: { value: this.mapComposerMotionBlur.renderTarget2.texture }
+					pDiffuse: { value: this.pointTexture },
+					resUV: { value: this.resUV },
 				},
-				vertexShader: this.pxlShaders.defaultVert(),
-				fragmentShader: this.pxlShaders.finalOverlaySlimShader(),
+				vertexShader: Shaders.Defaults.vert(),
+				fragmentShader: Shaders.BlurShaderPass.directionalBlurPass( "pDiffuse", [1,0], 20, 1.5 ),
 				defines: {}
 			} ), "tDiffuse"
 		);
-		this.mapOverlaySlimPass.needsSwap = true;
-
+    this.shaderPasses.blurXShaderPass.material.transparent = true
+		this.shaderPasses.blurXShaderPass.needsSwap = true;
+		this.composer.addPass( this.shaderPasses.blurXShaderPass );
+    
+		this.shaderPasses.blurYShaderPass = new ShaderPass(
+			new THREE.ShaderMaterial( {
+				uniforms: {
+					time:{ value:this.time },
+					tDiffuse: { value: null },
+					pDiffuse: { value: this.pointTexture },
+					resUV: { value: this.resUV },
+				},
+				vertexShader: Shaders.Defaults.vert(),
+				fragmentShader: Shaders.BlurShaderPass.directionalBlurPass( "tDiffuse", [0,1], 20, 1.5 ),
+				defines: {}
+			} ), "tDiffuse"
+		);
+    this.shaderPasses.blurYShaderPass.material.transparent = true
+		this.composer.addPass( this.shaderPasses.blurYShaderPass );
+    
+    
+		this.shaderPasses.scatterMixShaderPass = new ShaderPass(
+			new THREE.ShaderMaterial( {
+				uniforms: {
+					time:{ value:this.time },
+					tDiffuse: { value: null },
+					pDiffuse: { value: this.pointTexture },
+					resUV: { value: this.resUV },
+				},
+				vertexShader: Shaders.Defaults.vert(),
+				fragmentShader: Shaders.BloomShaderPass.scatterMixShaderPass(),
+				defines: {}
+			} ), "tDiffuse"
+		);
+    this.shaderPasses.scatterMixShaderPass.material.transparent = true
+		this.composer.addPass( this.shaderPasses.scatterMixShaderPass );
+    
+    
+    
+    
+		this.shaderPasses.bloomShaderPass = new UnrealBloomPass(
+              this.resWH.clone().multiplyScalar(.5),
+              .18,
+              0.8,
+              0.7 );
+		//this.shaderPasses.bloomShaderPass.threshold = this.pxlRenderSettings.bloomThresh;
+		//this.shaderPasses.bloomShaderPass.strength = this.pxlRenderSettings.bloomStrength;
+		//this.shaderPasses.bloomShaderPass.radius = this.pxlRenderSettings.bloomRadius;
+		//this.composer.addPass( this.shaderPasses.bloomShaderPass );
+		
 		// -- -- -- -- -- -- -- -- -- -- //
 		
-		this.mapComposer = new EffectComposer(this.engine);
 		
-		this.mapComposer.addPass( this.mapOverlayHeavyPass );
-		this.mapComposer.addPass( this.mapOverlayPass );
-		this.mapComposer.addPass( this.mapOverlaySlimPass );
-		this.mapOverlayHeavyPass.enabled=false;
-		this.mapOverlayPass.enabled=false;
+		//this.composer.addPass( this.shaderPasses.blurShaderPass );
+		this.shaderPasses.bloomShaderPass.enabled=true;
 		//this.mapOverlayPass.autoClear=true;
 		//this.mapOverlaySlimPass.enabled=false;
   }
+  
+  resize(){
+    let cnW = this.canvas.width
+    let cnH = this.canvas.height
+    
+    this.resUV = new THREE.Vector2( 1/cnW, 1/cnH );
+  }
+  
+  render( time ){
+    this.time.x = time
+    this.pointTexture.needsUpdate = true;
+    this.composer.render()
+  }
 }
 
-modules.export = NeurousGL
+export default NeurousGL

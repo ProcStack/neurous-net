@@ -1,11 +1,10 @@
 
-const Point = require( "./PointBase.js" )
+import Point from "./PointBase.js" 
 
 class PointNewton extends Point{
-  _type = "Newton"
-
   constructor(State, id,seed,pos,vel,lifeSpan,color,alpha){
     super( State, id,seed,pos,vel,lifeSpan,color,alpha )
+    this._type = "Newton"
     
 		this.pullDist = this.weight*90+(State.sW+State.sH)*(.1 + .1*State.mobile);
     
@@ -44,4 +43,4 @@ class PointNewton extends Point{
 
 }
 
-module.exports = PointNewton
+export default PointNewton

@@ -1,6 +1,5 @@
 
 class EmitterBase{
-  _type = "EmitterBase"
   get type() {
     return this._type
   }
@@ -9,6 +8,7 @@ class EmitterBase{
   }
   
   constructor( State ){
+    this._type = "EmitterBase"
     this.State=State
     this.time = 0
     this.runner = 0
@@ -80,4 +80,4 @@ class EmitterBase{
   
 }
 
-module.exports = EmitterBase
+export default EmitterBase

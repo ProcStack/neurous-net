@@ -1,11 +1,10 @@
 
-const Point = require( "./PointBase.js" )
+import Point from  "./PointBase.js" 
 
 class PointSpark extends Point{
-  _type = "Spark"
-
   constructor(State, id,seed,pos,vel,lifeSpan,color,alpha,trail,tlen){
     super( State, id,seed,pos,vel,lifeSpan,color,alpha )
+    this._type = "Spark"
 
 		this.tlen = Math.floor(tlen*this.weight);
 		this.size = this.weight*3+1;
@@ -43,4 +42,4 @@ class PointSpark extends Point{
 	}
 }
 
-module.exports = PointSpark
+export default PointSpark

@@ -13,7 +13,6 @@ const State={
   mouseY : 0,
   mButton : 0,
   paused : false,
-  runner : 0,
   mouseAttract : 0,
 
   touchDown : 0,
@@ -32,4 +31,4 @@ const State={
   IE : document.all?true:false
 } 
 
-module.exports = State
+export default State

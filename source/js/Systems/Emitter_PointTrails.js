@@ -1,10 +1,8 @@
 
-const EmitterBase = require( "./EmitterBase.js" )
-const PointTrail = require( "./Point_Trail.js" )
+import EmitterBase from  "./EmitterBase.js" 
+import PointTrail from  "./Point_Trail.js" 
 
 class Emitter_PointTrails extends EmitterBase{
-  _type = "PointTrails"
-  _forces = []
   get forces(){
     return this._forces;
   }
@@ -14,6 +12,8 @@ class Emitter_PointTrails extends EmitterBase{
   
   constructor(State){
     super(State)
+    this._type = "PointTrails"
+    this._forces = []
   }
   
 	collisionParticles(){
@@ -89,4 +89,4 @@ class Emitter_PointTrails extends EmitterBase{
 
 }
 
-module.exports = Emitter_PointTrails
+export default Emitter_PointTrails
