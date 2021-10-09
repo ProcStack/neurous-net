@@ -1,9 +1,9 @@
   
 class NeurousGL{
-  constructor(target, background){
+  constructor(){
   }
   
-  mapBootEngine(){
+  mapBootEngine(){ 
     // Rederer
     pxlEnv.engine=new THREE.WebGLRenderer({
       canvas: pxlGuiDraws.mapCanvas,

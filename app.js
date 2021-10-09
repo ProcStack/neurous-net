@@ -1,6 +1,10 @@
 const express = require('express');
 const app = express();
+
 const fs = require('fs');
+const browserify = require('browserify');
+const watchify = require('watchify');
+
 const path = require('path');
 const http = require('http').Server(app);
 
@@ -11,58 +15,111 @@ const stats = new Stats();
 
 // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 const Versions={}
-function getFileVersions(){
+function getFileVersions( fileKeys=[] ){
   const VersionFiles={
     "cssVersion" : {
-      "file":"./Public/style/Neurous.css",
+      "file":"./build/style/Neurous.min.css",
       "version":null
     },
     "jsVersion" : {
-      "file":"./Build/js/Neurous-Bundle.js",
+      "file":"./build/js/Neurous.min.js",
       "version":null
     }
   }
+  if( fileKeys.length == 0 ){
+    fileKeys=Object.keys(VersionFiles)
+  }else if( typeof(fileKeys) == "string" ){
+    fileKeys = [fileKeys]
+  }
 
-  Object.keys(VersionFiles).forEach( (v)=>{
+  fileKeys.forEach( (v)=>{
+    if( VersionFiles.hasOwnProperty( v ) ){
       let curFile = VersionFiles[v].file
       fs.stat(curFile, (err, stats) => {
-        if(err) {
-            throw err;
+        let curTime = Date.now()
+        if(!err) {
+            curTime = stats.mtime.getTime()
         }
-        Versions[v] = stats.mtime.getTime();
+        Versions[v] = curTime
       });
+    }
   })
 }
 getFileVersions() // Just so there is something there if browserify hasn't completed
 
 // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
+if( process.env.NODE_ENV ){
+  
+  const FileManager = require("./modules/FileManager.js");
+  const FileLister = new FileManager();
 
+  var neurousCSS = browserify({
+    entries: ['source/style/Neurous.css'],
+    cache: {},
+    packageCache: {},
+    plugin: [watchify]
+  });
+  neurousCSS.on('update', runUglifyCSS);
 
-function browserify () {
-  const {exec} = require("child_process")
-  let inputFile = "Public/js/Neurous.js"
-  let outputFile = "Build/js/Neurous-Bundle.js"
-  let cmd = `browserify ${inputFile} | uglifyjs -b -cm --mangle toplevel > ${outputFile}`
+  function runBrowserify () {
+    const {exec} = require("child_process")
+    let inputFile = "source/js/Neurous.js"
+    let outputFile = "Public/js/Neurous.min.js"
+    let cmd = `browserify ${inputFile} | uglifyjs -cm --mangle toplevel > ${outputFile}`
 
-  let startTime = Date.now()
-  exec(cmd, (err)=>{
-    let endTime = Date.now()
-    let durationTime = endTime - startTime
-    console.log("-- -- -- --")
-    if(err){
-      console.log("  Browserfy Errored; ")
-      console.log(err)
-    }else{
-      console.log(`  Browserfy Completed Successfully; ${outputFile}`)
-    }
-    console.log(`  Elapsed Time : ${durationTime} ms`)
-    console.log("-- -- -- --")
+    let startTime = Date.now()
+    exec(cmd, (err)=>{
+      let endTime = Date.now()
+      let durationTime = endTime - startTime
+      console.log("-- -- -- --")
+      if(err){
+        console.log("  Browserify -> Uglifyjs; Errored - ")
+        console.log(err)
+      }else{
+        console.log(`  Browserify -> Uglifyjs; Completed Successfully - ${outputFile}`)
+      }
+      console.log(`  Elapsed Time : ${durationTime} ms`)
+      console.log("-- -- -- --")
+      
+      getFileVersions("jsVersion") // Get updated bundle modified time
+    })
+  }
     
-    getFileVersions() // Get updated bundle modified time
+    
+  function runUglifyCSS () {
+    let inputFileCSS = "source/style/Neurous.css"
+    let outputFileCSS = "Public/style/Neurous.min.css"
+    let cmdCSS = `uglifycss ${inputFileCSS} > ${outputFileCSS}`
+    exec(cmdCSS, (err)=>{
+      let endTime = Date.now()
+      let durationTime = endTime - startTime
+      console.log("-- -- -- --")
+      if(err){
+        console.log("  Uglifycss; Errored - ")
+        console.log(err)
+      }else{
+        console.log(`  Uglifycss; Completed Successfully - ${outputFileCSS}`)
+      }
+      console.log(`  Elapsed Time : ${durationTime} ms`)
+      console.log("-- -- -- --")
+      
+      getFileVersions("cssVersion") // Get updated bundle modified time
+    })
+    
+  }
+  
+  runBrowserify()
+  runUglifyCSS()
+  
+  let entryDir = "source/js"
+  let neurousJS;
+  FileLister.getFileListPromise( entryDir )
+  .then( ()=>{
+    FileLister.watchFiles( FileLister.lists[entryDir], (f)=>{ runBrowserify() } )
   })
+  
 }
-browserify()
 
 // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
@@ -73,7 +130,7 @@ app.set('view engine', 'ejs');
 
 //Setup folders
 app.use( express.static(path.join(__dirname, '/Public')) );
-app.use( express.static(path.join(__dirname, '/Build/js')) );
+//app.use( express.static(path.join(__dirname, '/Build')) );
 //app.use('/images', express.static(path.join(__dirname, '/Source/images')) );
 //app.use('/js', express.static(path.join(__dirname, '/Source/js')) );
 //app.use('/style', express.static(path.join(__dirname, '/Source/style')) );
