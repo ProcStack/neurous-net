@@ -27,9 +27,8 @@ class EmitterBase{
   }
   
   updateCount(){
-    let curCount = this.points.length
-    this.curId += curCount - this.count
-    this.count = curCount
+    this.curId += 1
+    this.count = this.points.length
   }
   
   // Per-Frame logic; update time, check for dead particles, clean up Dead point

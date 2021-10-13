@@ -29,7 +29,7 @@ import Emitter_Fields from "./Systems/Emitter_Fields.js"
 
 class Neurous{
   constructor(target, targetgl, background){
-    
+    this.State=State
     this.startTime = Date.now()*.001
     this.elapsedTime = 0
     
@@ -84,7 +84,7 @@ class Neurous{
     State.mobile=mobile;
     State.tablet=tablet;
     
-    this.sparkCount = mobile ? 7 : 30;
+    this.sparkCount = mobile ? 7 : 20;
     
     this.verboseTarget = document.getElementById( "verbose" );
   
@@ -388,7 +388,7 @@ class Neurous{
     
   buildRendererGL(){
     
-    this.NeurousGL = new NeurousGL( this.targetgl, this.target );
+    this.NeurousGL = new NeurousGL( this, this.targetgl, this.target );
     this.NeurousGL.init()
     
   }
@@ -406,12 +406,17 @@ class Neurous{
     if( State.mobile ){
       count += 50;
     }
+    count= Math.round(count*.1)*10;
     pointTrailEmitter.scatterPoints( [State.sW, State.sH],count );
     this.emitters.pointTrails.push( pointTrailEmitter )
       
     let sparksEmitter = new Emitter_Sparks( State );
     this.emitters.sparks.push( sparksEmitter )
     
+
+    if( this.NeurousGL ){
+      this.NeurousGL.buildUserSystem("local")
+    }
 
   }
   

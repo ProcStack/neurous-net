@@ -10,6 +10,13 @@ BODY{
 	-ms-user-select : none;
 	-o-user-select : none;
 }
+.NeurousGLStyle{
+  z-index:3;
+  position:fixed;
+  top:0px;
+  left:0px;
+  touch-action:none;
+}
 .introCards{
 	z-index : 1;
 	text-align : center;

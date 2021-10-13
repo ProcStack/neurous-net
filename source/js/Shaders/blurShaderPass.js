@@ -11,6 +11,8 @@ function directionalBlurPass( source, xyDir, blurCounts, stepRate ){
         uniform vec2 resUV;
         varying vec2 vUv;
 
+        out vec4 outCd;
+  
         #define PI 3.14159265358979
         
         void main() {
@@ -45,7 +47,7 @@ function directionalBlurPass( source, xyDir, blurCounts, stepRate ){
           }
           vec4 Cd=blurCd;
           //Cd.a=.01;
-            gl_FragColor = Cd;
+          outCd = Cd;
         }`;
 	
 	return retFrag;

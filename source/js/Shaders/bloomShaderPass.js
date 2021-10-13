@@ -11,6 +11,8 @@ function bloomPass(){
         uniform vec2 resUV;
         varying vec2 vUv;
 
+        out vec4 outCd;
+        
         #define PI 3.14159265358979
         
         void main() {
@@ -46,7 +48,7 @@ function bloomPass(){
           }
           Cd=blurCd;
           //Cd.a=.01;
-            gl_FragColor = Cd;
+          outCd = Cd;
         }`;
 	
 	return retFrag;
@@ -61,6 +63,8 @@ function scatterMixShaderPass(){
         uniform vec2 resUV;
         varying vec2 vUv;
 
+        out vec4 outCd;
+        
         #define PI 3.14159265358979
         
         void main() {
@@ -101,7 +105,7 @@ function scatterMixShaderPass(){
           
           Cd = mix( blurCd, Cd, Cd.a);
           //Cd.a=.01;
-            gl_FragColor = Cd;
+          outCd = Cd;
         }`;
 	
 	return retFrag;

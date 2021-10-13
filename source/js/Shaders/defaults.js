@@ -3,14 +3,21 @@
 // Header and Quality Information                       //
 /////////////////////////////////////////////////////////
 
-function shaderHeader(){
-	let ret=`
+// Header data for all shaders
+// WebGL2 should use WebGL ES 300
+function shaderHeader( setGL300=true ){
+  let ret = '';
+  if( setGL300 ){
+    ret=`#version 300 es`;
+  }
+	ret += `
+  
 		#ifdef GL_FRAGMENT_PRECISION_HIGH
 			precision highp float;
 		#else
 			precision mediump float;
 		#endif
-        `;
+    `;
 	return ret;
 }
 
@@ -24,8 +31,8 @@ function vert(){
 	ret+=`
 	varying vec2 vUv;
 	void main(){
-		vUv=uv;
-		vec4 modelViewPosition=modelViewMatrix * vec4(position, 1.0);
+		vUv = uv;
+		vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
 		gl_Position = projectionMatrix*modelViewPosition;
 	}`;
 	return ret;
@@ -35,11 +42,12 @@ function shiftVert(){
 	let ret=shaderHeader();
 	ret+=`
 	varying vec2 vUv;
-    varying vec2 vUvShift;
+  varying vec2 vUvShift;
+  
 	void main(){
-		vUv=uv;
-        vUvShift=uv-.5;
-		vec4 modelViewPosition=modelViewMatrix * vec4(position, 1.0);
+		vUv = uv;
+    vUvShift = uv-.5;
+		vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
 		gl_Position = projectionMatrix*modelViewPosition;
 	}`;
 	return ret;
@@ -50,11 +58,12 @@ function camPosVert(){
 	ret+=`
 	varying vec3 camPos;
 	varying vec2 vUv;
+  
 	void main(){
 		vUv=uv;
-		vec4 modelViewPosition=modelViewMatrix * vec4(position, 1.0);
+		vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
 		gl_Position = projectionMatrix*modelViewPosition;
-		camPos=(modelViewMatrix*vec4(0.0,0.0,1.0,1.0)).xyz;
+		camPos = (modelViewMatrix*vec4(0.0,0.0,1.0,1.0)).xyz;
 	}`;
 	return ret;
 }
@@ -63,9 +72,12 @@ export function frag(){ // ## set gl common variables to defines
 	let ret=shaderHeader();
 	ret+=`
 	varying vec2 vUv;
+  
+  out vec4 outCd;
+  
 	void main(){
-		vec4 Cd=vec4( 0.5, 0.5, 0.0, 1.0 );
-		gl_FragColor=Cd;
+		vec4 Cd = vec4( 0.5, 0.5, 0.0, 1.0 );
+		outCd = Cd;
 	}`;
 	return ret;
 }
